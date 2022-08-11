@@ -24,6 +24,8 @@ package grpc
 
 import (
 	"micro-service-sample/configure"
+	"micro-service-sample/transport/grpc/calculate"
+	"micro-service-sample/transport/grpc/version"
 
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	"github.com/leewckk/go-kit-micro-service/middlewares/tracing/report"
@@ -48,6 +50,9 @@ func Run(cfg *configure.Config) chan error {
 	procs := make([]grpc.RegisterRouteProc, 0, 0)
 	/// TODO
 	// 注册服务
+	procs = append(procs, version.RegisterVersionServiceProc)
+	procs = append(procs, calculate.RegisterCalculateProc)
+	procs = append(procs, calculate.RegisterMessagingProc)
 
 	router := grpc.NewRouter(name,
 		grpc.RouterServerOptions(opts...), //// 插件

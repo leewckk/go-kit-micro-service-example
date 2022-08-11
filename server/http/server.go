@@ -25,6 +25,7 @@ package http
 import (
 	"fmt"
 	"micro-service-sample/configure"
+	"micro-service-sample/transport/gin/calculate"
 	"micro-service-sample/transport/gin/version"
 
 	"github.com/leewckk/go-kit-micro-service/middlewares/tracing/report"
@@ -49,8 +50,12 @@ func Run(cfg *configure.Config) chan error {
 	procs := make([]http.RegisterRouteProc, 0, 0)
 	/// TODO
 	/// 添加服务
+	procs = append(procs, version.RegisterVersionServiceProc)
+	procs = append(procs, calculate.RegisterCalculateProc)
+	procs = append(procs, calculate.RegisterMessagingProc)
 
 	router := http.NewRouter(fmt.Sprintf(":%v", port),
+		http.RouterVersion(""),
 		http.RouterServerOptions(opts...), //// 注册一些中间件
 		http.RouterProcs(procs...),        //// 注册服务
 		http.RouterHealth(http.DEFAULT_HTTP_HEART_BEAT, "/info", version.NewVersionServiceTransport()[0]),
