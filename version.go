@@ -25,7 +25,7 @@ package main
 
 import (
 	"fmt"
-	"micro-service/version"
+	"micro-service-sample/version"
 )
 
 var (

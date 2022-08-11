@@ -20,23 +20,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package main
+package grpc
 
 import (
-	"fmt"
 	"micro-service-sample/configure"
-	"micro-service-sample/server/grpc"
-	"micro-service-sample/server/http"
-	_ "micro-service-sample/service"
+
+	kitgrpc "github.com/go-kit/kit/transport/grpc"
+	"github.com/leewckk/go-kit-micro-service/middlewares/tracing/report"
+	"github.com/leewckk/go-kit-micro-service/router/grpc"
 )
 
-func main() {
-	fmt.Println(FullVersion())
-	cfg := configure.GetDefault().Config()
-	select {
-	case <-grpc.Run(cfg):
-		break
-	case <-http.Run(cfg):
-		break
+func Run(cfg *configure.Config) chan error {
+
+	trapi := cfg.Tracing.Reporter
+	port := cfg.Server.Grpc.Port
+	name := cfg.Discovery.ServiceName
+	center := cfg.Discovery.Host
+	centerPort := cfg.Discovery.Port
+
+	opts := make([]kitgrpc.ServerOption, 0, 0)
+	traceReporter := report.NewZipkinReporter(trapi)
+	if nil != traceReporter {
+		// defer traceReporter.Close()
+		opts = append(opts, report.NewGrpcServerTracer(traceReporter))
 	}
+
+	procs := make([]grpc.RegisterRouteProc, 0, 0)
+	/// TODO
+	// 注册服务
+
+	router := grpc.NewRouter(name,
+		grpc.RouterServerOptions(opts...), //// 插件
+		grpc.RouterProcs(procs...),        //// 服务注册
+	)
+
+	return grpc.Run(router, port, name, center, centerPort)
 }

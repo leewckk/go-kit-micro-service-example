@@ -20,23 +20,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package main
+package service
 
 import (
-	"fmt"
-	"micro-service-sample/configure"
-	"micro-service-sample/server/grpc"
-	"micro-service-sample/server/http"
-	_ "micro-service-sample/service"
+	"context"
+	endpoint "micro-service-sample/endpoint/version"
+	"micro-service-sample/version"
 )
 
-func main() {
-	fmt.Println(FullVersion())
-	cfg := configure.GetDefault().Config()
-	select {
-	case <-grpc.Run(cfg):
-		break
-	case <-http.Run(cfg):
-		break
-	}
+func init() {
+	endpoint.ImplementVersionServiceGet(func() endpoint.VersionServiceGet {
+		return func(ctx context.Context, request *endpoint.VersionRequest) (*endpoint.VersionResponse, error) {
+			resp := &endpoint.VersionResponse{}
+			v := version.GetVersion()
+
+			resp.BuilderVersion = v.GoVersion
+			resp.BuildTime = v.BuildTime
+			resp.Hash = v.GitHash
+			resp.HostName = v.HostName
+			resp.Platform = v.Platform
+			resp.RunningTimes = v.RunningTimes
+			resp.Tag = v.GitTag
+			resp.Uptime = v.Uptime.String()
+			resp.Version = v.Version
+			return resp, nil
+		}
+	})
 }

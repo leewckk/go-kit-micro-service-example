@@ -20,23 +20,38 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package main
+package http
 
 import (
 	"fmt"
 	"micro-service-sample/configure"
-	"micro-service-sample/server/grpc"
-	"micro-service-sample/server/http"
-	_ "micro-service-sample/service"
+
+	"github.com/leewckk/go-kit-micro-service/middlewares/tracing/report"
+	transhttp "github.com/leewckk/go-kit-micro-service/middlewares/transport/http"
+	"github.com/leewckk/go-kit-micro-service/router/http"
 )
 
-func main() {
-	fmt.Println(FullVersion())
-	cfg := configure.GetDefault().Config()
-	select {
-	case <-grpc.Run(cfg):
-		break
-	case <-http.Run(cfg):
-		break
+func Run(cfg *configure.Config) chan error {
+
+	trapi := cfg.Tracing.Reporter
+	port := cfg.Server.Http.Port
+	name := cfg.Discovery.ServiceName
+	center := cfg.Discovery.Host
+	centerPort := cfg.Discovery.Port
+
+	opts := make([]transhttp.ServerOption, 0, 0)
+	traceReporter := report.NewZipkinReporter(trapi)
+	if nil != traceReporter {
+		// defer traceReporter.Close()
+		opts = append(opts, report.NewGinServerTracer(traceReporter))
 	}
+	procs := make([]http.RegisterRouteProc, 0, 0)
+	/// TODO
+	/// 添加服务
+
+	router := http.NewRouter(fmt.Sprintf(":%v", port),
+		http.RouterServerOptions(opts...), //// 注册一些中间件
+		http.RouterProcs(procs...),        //// 注册服务
+	)
+	return http.Run(router, port, name, center, centerPort)
 }
