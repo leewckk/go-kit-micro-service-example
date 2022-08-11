@@ -1,0 +1,103 @@
+syntax = "proto3";
+package calculate;
+option go_package="pb/golang/pkg/calculate;calculate";
+
+
+import "google/api/annotations.proto";
+
+
+message CalMessage {
+    int32 evalint = 1;
+    float  evalfloat = 2;
+    double evaldouble = 3;
+    bool evalbool = 4;
+    sint32 evalsint32 = 5;
+    uint32 evalunit32 = 6;
+    int64 evalint64 = 7;
+    sint64 evalsint64 = 8;
+    uint64 evaluint64 = 9;
+    sfixed32 evalsfix32 = 10;
+    fixed32 evalfix32 = 11;
+    sfixed64 evalfixed64 = 12;
+    string evalstring = 13;
+    bytes evalbytes = 14;
+    string msg = 15;
+}
+
+message ExternalInfo {
+    int32 evalint = 1;
+    float  evalfloat = 2;
+    double evaldouble = 3;
+    bool evalbool = 4;
+    sint32 evalsint32 = 5;
+    uint32 evalunit32 = 6;
+    int64 evalint64 = 7;
+    sint64 evalsint64 = 8;
+    uint64 evaluint64 = 9;
+    sfixed32 evalsfix32 = 10;
+    fixed32 evalfix32 = 11;
+    sfixed64 evalfixed64 = 12;
+    string evalstring = 13;
+    bytes evalbytes = 14;
+    map<string, CalMessage> callMsgs = 15;
+}
+
+message AddRequest {
+    float element0 = 1;             /// 参数1 
+    float element1 = 2;             /// 参数2
+    CalMessage msg = 3;             /// 消息
+    repeated ExternalInfo Externals = 4;    /// 附加信息
+    repeated float datelist = 5;        /// 测试字段
+    map<string, ExternalInfo> emapstr = 6;  /// 字典测试1
+    map<int32, ExternalInfo> emapint = 7;   /// 字典测试2
+    map<int32, double> emadouble = 8;   /// 字典测试3
+};
+
+
+message AddRequest2 {
+    map<string, AddRequest> requests = 1;
+};
+
+
+message CalculateResult {
+    int32 status = 1;
+    string msg = 2;
+    float result = 3;
+}
+
+service Calculate {
+    rpc Add(AddRequest) returns(CalculateResult) {
+        option(google.api.http) = {
+            post : "/v1/calculate"
+        };
+    } 
+    rpc Add2(AddRequest2) returns(CalculateResult) {
+        option(google.api.http) = {
+            post : "/v1/calculate2"
+        };
+    }
+}
+
+
+
+message GetMessageRequest {
+    string messageId = 1;       /// message id 
+    string userId = 2;          /// user id 
+}
+
+message GetMessageResponse {
+    string messageId = 1;       /// 返回的消息Id
+    string userId = 2;          /// 返回的userId
+    string text = 3;            /// 消息主题
+}
+
+service Messaging {
+    rpc GetMessage(GetMessageRequest) returns (GetMessageResponse) {
+        option(google.api.http) = {
+            get : "/v1/messages/{messageId}"
+            additional_bindings {
+                get : "/v1/users/{userId}/messages/{messageId}"
+            }
+        };
+    };
+};
